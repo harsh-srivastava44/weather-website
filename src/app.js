@@ -5,6 +5,9 @@ const geoUtils = require("../utils/geocode.js");
 const weatherUtils = require("../utils/weather.js");
 const app = express();
 
+//PORT provided by heroku.
+const port = process.env.PORT || 3000;
+
 // Define paths for Express config
 const publicDirectoryPath = path.join(__dirname, "../public");
 const viewsPath = path.join(__dirname, "../templates/views");
@@ -52,27 +55,30 @@ app.get("/weather", (req, res) => {
       error: "Pass in address feild",
     });
   }
-  geoUtils.getGeoCoordinates(req.query.address, (error, {latitude,longitude,address} = {}) => {
-    if (error) {
-      return res.send({
-        error: "Error in fetching data for place",
-      });
-    }
-    weatherUtils.getCurrentWeather(
-     latitude,
-     longitude,
-      (error, currentWeather) => {
-        if (error) {
-          return res.json({error : "Error in getting current weather" })
-        }
-        res.send({
-          forecast: `its currently ${currentWeather.weather_descriptions}. The current temprature is ${currentWeather.temperature}°C`,
-          location : req.query.address,
-          address
+  geoUtils.getGeoCoordinates(
+    req.query.address,
+    (error, { latitude, longitude, address } = {}) => {
+      if (error) {
+        return res.send({
+          error: "Error in fetching data for place",
         });
       }
-    );
-  });
+      weatherUtils.getCurrentWeather(
+        latitude,
+        longitude,
+        (error, currentWeather) => {
+          if (error) {
+            return res.json({ error: "Error in getting current weather" });
+          }
+          res.send({
+            forecast: `its currently ${currentWeather.weather_descriptions}. The current temprature is ${currentWeather.temperature}°C`,
+            location: req.query.address,
+            address,
+          });
+        }
+      );
+    }
+  );
 });
 
 app.get("/help/*", (req, res) => {
@@ -91,6 +97,6 @@ app.get("*", (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server is up on port 3000.");
+app.listen(port, () => {
+  console.log(`Server is up on port ${port}.`);
 });
